@@ -1,0 +1,44 @@
+import requests
+import json
+
+# OTRS API endpoint and credentials
+otrs_api_url = "https://your-otrs-instance/otrs/nph-genericinterface.pl/Webservice/GenericTicketConnectorREST/Ticket"
+otrs_username = "your-otrs-username"
+otrs_password = "your-otrs-password"
+
+# Azure DevOps API endpoint and credentials
+azure_devops_url = "https://dev.azure.com/your-organization/your-project/_apis/wit/workitems"
+azure_devops_token = "your-azure-devops-token"
+
+# Function to fetch tickets from OTRS
+def fetch_otrs_tickets():
+    response = requests.get(otrs_api_url, auth=(otrs_username, otrs_password))
+    return response.json()
+
+# Function to create tickets in Azure DevOps
+def create_azure_devops_ticket(title, description):
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Basic " + azure_devops_token
+    }
+    payload = {
+        "op": "add",
+        "fields": {
+            "System.Title": title,
+            "System.Description": description,
+            "System.WorkItemType": "Task"  # Adjust work item type as needed
+        }
+    }
+    response = requests.post(azure_devops_url, headers=headers, data=json.dumps(payload))
+    return response.json()
+
+# Main program
+if __name__ == "__main__":
+    # Fetch tickets from OTRS
+    otrs_tickets = fetch_otrs_tickets()
+
+    # Propagate tickets to Azure DevOps
+    for ticket in otrs_tickets:
+        title = ticket.get("Title", "")
+        description = ticket.get("Description", "")
+        create_azure_devops_ticket(title, description)
